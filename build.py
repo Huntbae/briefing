@@ -29,6 +29,20 @@ CONTACT = "huntbae@huntbae.com"
 HOME = "https://www.huntbae.com"
 WEEKDAYS = "월화수목금토일"
 
+
+def load_config() -> dict:
+    """site.json 의 운영 설정(구독 웹앱 주소 등)을 읽는다. 없으면 빈 값."""
+    p = ROOT / "site.json"
+    if p.exists():
+        with p.open(encoding="utf-8") as f:
+            return json.load(f)
+    return {}
+
+
+CONFIG = load_config()
+SUBSCRIBE_APP = CONFIG.get("subscribe_url", "").strip()  # Apps Script 웹앱 /exec 주소
+SUBSCRIBE_PATH = "/subscribe/"  # 사이트 안의 고정 주소(웹앱으로 넘겨 줌)
+
 e = html.escape
 
 
@@ -173,7 +187,9 @@ def render_issue_body(issue: dict) -> str:
     parts.append(f'<section class="check"><h2>경영자 체크리스트</h2><ul>{chk}</ul></section>')
 
     parts.append(
-        '<section class="cta"><p>매일 아침 메일로 받아 보시려면 <a href="/about/">구독 안내</a>를 확인하십시오.</p></section></article>'
+        (f'<section class="cta"><p>매일 아침 메일로 받아 보시려면 <a class="btn" href="{SUBSCRIBE_PATH}">무료 구독 신청</a></p></section></article>'
+         if SUBSCRIBE_APP else
+         '<section class="cta"><p>매일 아침 메일로 받아 보시려면 <a href="/about/">구독 안내</a>를 확인하십시오.</p></section></article>')
     )
     return "\n".join(parts)
 
@@ -197,6 +213,32 @@ def render_archive(issues: list[dict]) -> str:
     return page(f"아카이브 — {BRAND}", f'<h1>아카이브</h1><ul class="list">{items}</ul>', canonical=SITE_URL + "/archive/")
 
 
+def subscribe_block() -> str:
+    privacy = ("수집 항목은 이메일(필수)과 이름·소속(선택)이며, 메일 발송 목적에만 쓰고 구독 해지 시 발송을 멈춥니다. "
+               "신청하시면 확인 메일이 가며, 메일 안의 버튼을 눌러야 구독이 시작됩니다. 메일 하단 링크로 언제든 해지할 수 있습니다.")
+    if SUBSCRIBE_APP:
+        return f'<p><a class="btn" href="{SUBSCRIBE_PATH}">무료 구독 신청</a></p><p class="muted">{privacy}</p>'
+    return (f'<p>구독 신청 양식은 준비 중입니다. 먼저 받아 보고 싶으시면 <a href="mailto:{CONTACT}?subject=모닝 레이더 구독 신청">{CONTACT}</a>로 '
+            f'이름과 이메일을 보내 주십시오.</p><p class="muted">{privacy}</p>')
+
+
+def render_subscribe() -> str:
+    """/subscribe/ — 구독 웹앱으로 넘겨 주는 고정 주소. 웹앱 주소가 바뀌어도 사이트 링크는 그대로 둔다."""
+    if not SUBSCRIBE_APP:
+        return page(f"구독 — {BRAND}", '<h1>구독 신청</h1><p>구독 양식을 준비 중입니다. <a href="/about/">소개·구독</a>을 확인하십시오.</p>',
+                    canonical=SITE_URL + SUBSCRIBE_PATH)
+    url = e(SUBSCRIBE_APP)
+    return f"""<!DOCTYPE html>
+<html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>구독 신청 — {BRAND}</title>
+<meta http-equiv="refresh" content="0; url={url}">
+<link rel="canonical" href="{SITE_URL}{SUBSCRIBE_PATH}">
+<link rel="stylesheet" href="/assets/style.css">
+</head><body><main class="wrap"><p>구독 신청 양식으로 이동합니다. 이동하지 않으면 <a href="{url}">여기</a>를 누르십시오.</p></main></body></html>
+"""
+
+
 def render_about() -> str:
     body = f"""<article class="issue">
 <h1>{BRAND} 소개</h1>
@@ -212,7 +254,7 @@ def render_about() -> str:
 <li>정책은 사실과 경영 영향만 쓰고, 정치적 평가는 하지 않습니다.</li>
 <li>오류는 이 웹 페이지에서 고치고 정정 사실을 표시합니다.</li></ul></section>
 <section><h2>메일로 받기</h2>
-<p>구독 신청 양식은 준비 중입니다. 먼저 받아 보고 싶으시면 <a href="mailto:{CONTACT}?subject=모닝 레이더 구독 신청">{CONTACT}</a>로 이름과 이메일을 보내 주십시오. 수집 항목은 이메일(필수)과 이름·소속(선택)이며, 메일 하단 링크로 언제든 구독을 해지할 수 있습니다.</p></section>
+{subscribe_block()}</section>
 <section><h2>발행인</h2><p>{e(PUBLISHER)} · <a href="{HOME}">huntbae.com</a> · <a href="mailto:{CONTACT}">{CONTACT}</a></p></section>
 </article>"""
     return page(f"소개·구독 — {BRAND}", body, canonical=SITE_URL + "/about/")
@@ -331,6 +373,7 @@ def main() -> int:
     write("/index.html", render_index(issues))
     write("/archive/index.html", render_archive(issues))
     write("/about/index.html", render_about())
+    write("/subscribe/index.html", render_subscribe())
     write("/feed.xml", render_feed(issues))
     print(f"built {len(issues)} issue(s); latest {issues[0]['date']}")
     return 0
