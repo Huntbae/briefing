@@ -69,3 +69,11 @@ table { width: 100%; border-collapse: collapse; font-size: 15px; }
 }
 .btn { display: inline-block; background: #1f3864; color: #fff !important; padding: 10px 18px; border-radius: 6px; text-decoration: none; font-weight: 600; }
 .btn:hover { background: #4472c4; }
+.impact { margin: 10px 0 4px; border: 1px solid var(--line); border-radius: 6px; padding: 0 12px; font-size: 15px; }
+.impact summary { cursor: pointer; padding: 8px 0; color: var(--accent2); font-weight: 600; }
+.impact[open] summary { border-bottom: 1px solid var(--line); margin-bottom: 8px; }
+.impact dl { margin: 0; display: grid; grid-template-columns: 7.5em 1fr; gap: 6px 12px; }
+.impact dt { font-weight: 700; color: var(--accent); }
+.impact dd { margin: 0; }
+.impact .note { font-size: 13px; color: var(--muted); margin: 8px 0 10px; }
+@media (max-width: 560px) { .impact dl { grid-template-columns: 1fr; } .impact dd { margin-bottom: 6px; } }

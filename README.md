@@ -38,6 +38,8 @@
   "market_note": "시세 출처",
   "sections": [{"id": "economy|tech|mobility", "title": "", "items": [
     {"title": "", "body": ["문단"], "so_what": "우리 회사는 한 줄",
+     "impact": {"domestic": "국내 산업", "global": "해외 산업", "policy": "정책",
+                "demand": "소비자·수요자", "b2b": "B2B 영향"},   // 선택. 웹에서 '더보기'로 접혀 보임
      "sources": [{"name": "", "url": "", "date": "YYYY-MM-DD"}]}]}],
   "radar": [{"title": "", "org": "", "deadline": "YYYY-MM-DD|null", "kind": "", "url": "", "note": ""}],
   "calendar": [{"date": "YYYY-MM-DD", "event": ""}],
@@ -52,4 +54,5 @@
 - 언론사 사진·방송 화면은 쓰지 않습니다.
 - 수치는 원문 2곳과 대조하고, 1곳뿐이면 출처를 명시합니다.
 - 정책은 사실과 경영 영향만 쓰고 정치적 평가는 하지 않습니다.
+- `impact`(파급효과 분석)는 편집부 전망입니다. 본문에 확인된 사실만 근거로 쓰고 새 수치를 만들지 않습니다. 메일에는 웹 항목으로 가는 '더보기' 링크만 붙습니다.
 - 오류는 이 저장소의 원고를 고쳐 정정합니다.

@@ -129,6 +129,28 @@ def render_sources(sources: list[dict]) -> str:
     return f'<p class="src">출처: {links}</p>'
 
 
+IMPACT_LABELS = [
+    ("domestic", "국내 산업"),
+    ("global", "해외 산업"),
+    ("policy", "정책"),
+    ("demand", "소비자·수요자"),
+    ("b2b", "B2B"),
+]
+
+
+def render_impact(impact):
+    """항목별 파급효과 분석(선택). 웹에서는 접힌 '더보기'로 보입니다."""
+    if not impact:
+        return ""
+    rows = "".join(
+        f"<dt>{label}</dt><dd>{e(impact[key])}</dd>" for key, label in IMPACT_LABELS if impact.get(key)
+    )
+    return (
+        '<details class="impact"><summary>더보기 · 파급효과 분석</summary>'
+        f'<dl>{rows}</dl><p class="note">편집부 분석입니다. 보도된 사실을 바탕으로 한 전망이며 확정된 결과가 아닙니다.</p></details>'
+    )
+
+
 def render_issue_body(issue: dict) -> str:
     parts = []
     sample = '<span class="badge">견본</span>' if issue.get("sample") else ""
@@ -158,13 +180,14 @@ def render_issue_body(issue: dict) -> str:
 
     for sec in issue["sections"]:
         items = []
-        for it in sec["items"]:
+        for n, it in enumerate(sec["items"], 1):
             body = "".join(f"<p>{e(p)}</p>" for p in it["body"])
             items.append(
-                f"""<div class="item">
+                f"""<div class="item" id="{e(sec['id'])}-{n}">
 <h3>{e(it['title'])}</h3>
 {body}
 <p class="sowhat"><strong>우리 회사는</strong> {e(it['so_what'])}</p>
+{render_impact(it.get('impact'))}
 {render_sources(it['sources'])}
 </div>"""
             )
@@ -303,11 +326,16 @@ def render_mail(issue: dict) -> str:
     secs = []
     for sec in issue["sections"]:
         rows = []
-        for it in sec["items"]:
+        for n, it in enumerate(sec["items"], 1):
+            more = (
+                f'<p style="margin:4px 0 0;{font}font-size:13px"><a href="{e(url)}#{e(sec["id"])}-{n}" style="color:#4472c4">파급효과 분석 더보기 &rarr;</a></p>'
+                if it.get("impact") else ""
+            )
             rows.append(
                 f'<p style="margin:14px 0 4px;{font}font-size:16px;font-weight:700;color:#111">{e(it["title"])}</p>'
                 f'<p style="margin:0 0 4px;{font}font-size:14px;line-height:1.6;color:#333">{e(it["body"][0])}</p>'
                 f'<p style="margin:0;{font}font-size:13px;line-height:1.6;color:#1f3864"><strong>우리 회사는</strong> {e(it["so_what"])}</p>'
+                + more
             )
         secs.append(
             f'<tr><td style="padding:18px 24px 0;{font}"><p style="margin:0;font-size:12px;font-weight:700;color:#4472c4;letter-spacing:1px">{e(sec["title"])}</p>{"".join(rows)}</td></tr>'
